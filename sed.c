@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <string.h>
 #include <unistd.h>
 #include <errno.h>
 #include <libgen.h>
@@ -303,9 +304,68 @@ int sed_ownership(int argc, char **argv, struct command *cmd, struct plugin *plu
 
 int sed_activatelsp(int argc, char **argv, struct command *cmd, struct plugin *plugin)
 {
-	char *desc = "Activate the Locking SP. If you want to activate in sum provide a LR  > 0";
+	const char *desc = "Activate the Locking SP. If you want to activate in sum provide a LR  > 0";
+	const char *lrstr = "A list of lrs separated by , which you want to "\
+		"activate. If you want to activate in normal mode provide an "\
+		"empty string, If activiating in SUM do 1,2,3 if you want to activate"\
+		"Those ranges, 1,5,4 etc...";
 
-	return do_generic_opal(argc, argv, cmd, plugin, desc, IOC_OPAL_ACTIVATE_LSP);
+	struct opal_lr_act opal_activate = { 0 };
+	struct config {
+                bool sum;
+		char *password;
+		char *lr_str;
+	};
+	struct config cfg = { };
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"password", 'p', "FMT", CFG_STRING, &cfg.password, required_argument, pw_d},
+		{"lr_str", 'l', "FMT", CFG_STRING, &cfg.lr_str, required_argument, lrstr},
+		{"sum",    's', ""   , CFG_NONE, &cfg.sum, no_argument, sum_d},
+		{NULL}
+	};
+	unsigned long parsed;
+	size_t count = 0;
+	char *num, *errchk;
+	int fd;
+
+	fd = parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (cfg.password == NULL || (cfg.sum && !cfg.lr_str)) {
+		fprintf(stderr, "Must Provide a password, and a LR string if SUM \n");
+		return EINVAL;
+	}
+
+	opal_activate.sum = cfg.sum;
+	fprintf(stderr, "Sum is %d\n", cfg.sum);
+	if (!cfg.lr_str)
+		opal_activate.num_lrs = 1;
+	else {
+		num = strtok(cfg.lr_str, ",");
+		while (num != NULL && count < OPAL_MAX_LRS) {
+			parsed = strtoul(num, &errchk, 10);
+			if (errchk == num)
+				continue;
+			opal_activate.lr[count] = parsed;
+			fprintf(stderr, "added %lu to lr at index %zu\n", parsed, count);
+			num = strtok(NULL, ",");
+			count++;
+		}
+		opal_activate.num_lrs = count;
+	}
+
+	opal_activate.key.key_len = snprintf(opal_activate.key.key,
+					     sizeof(opal_activate.key.key),
+					     "%s", cfg.password);
+
+	return opal_error_to_human(ioctl(fd, IOC_OPAL_ACTIVATE_LSP,
+					 &opal_activate));
+}
+
+int sed_activate_sum_lr(int argc, char **argv, struct command *cmd, struct plugin *plugin)
+{
+	char *desc = "Activate a single user mode Locking range";
+
+	return do_generic_opal(argc, argv, cmd, plugin, desc, IOC_OPAL_ACTIVATE_SUM_LR);
 }
 
 int sed_reverttper(int argc, char **argv, struct command *cmd, struct plugin *plugin)

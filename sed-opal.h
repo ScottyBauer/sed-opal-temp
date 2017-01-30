@@ -8,6 +8,7 @@
 typedef unsigned char u8;
 
 #define OPAL_KEY_MAX 256
+#define OPAL_MAX_LRS 9
 
 enum opal_mbr {
 	OPAL_MBR_ENABLE,
@@ -37,6 +38,13 @@ struct opal_key {
 	uint8_t	lr;
 	uint8_t	key_len;
 	char	key[OPAL_KEY_MAX];
+};
+
+struct opal_lr_act {
+	int sum;
+	uint8_t num_lrs;
+	uint8_t lr[OPAL_MAX_LRS];
+	struct opal_key key;
 };
 
 struct opal_session_info {
@@ -90,5 +98,6 @@ struct opal_mbr_data {
 #define IOC_OPAL_ENABLE_DISABLE_MBR _IOW('p', 229, struct opal_mbr_data)
 #define IOC_OPAL_ERASE_LR           _IOW('p', 230, struct opal_session_info)
 #define IOC_OPAL_SECURE_ERASE_LR    _IOW('p', 231, struct opal_session_info)
+#define IOC_OPAL_ACTIVATE_SUM_LR    _IOW('p', 232, struct opal_key)
 
 #endif /* _SED_OPAL_H */
