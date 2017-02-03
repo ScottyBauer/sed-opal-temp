@@ -11,21 +11,21 @@ typedef unsigned char u8;
 #define OPAL_MAX_LRS 9
 
 enum opal_mbr {
-	OPAL_MBR_ENABLE,
-	OPAL_MBR_DISABLE,
+	OPAL_MBR_ENABLE = 0x0,
+	OPAL_MBR_DISABLE = 0x01,
 };
 
 enum opal_user {
-	OPAL_ADMIN1,
-	OPAL_USER1,
-	OPAL_USER2,
-	OPAL_USER3,
-	OPAL_USER4,
-	OPAL_USER5,
-	OPAL_USER6,
-	OPAL_USER7,
-	OPAL_USER8,
-	OPAL_USER9,
+	OPAL_ADMIN1 = 0x0,
+	OPAL_USER1 = 0x01,
+	OPAL_USER2 = 0x02,
+	OPAL_USER3 = 0x03,
+	OPAL_USER4 = 0x04,
+	OPAL_USER5 = 0x05,
+	OPAL_USER6 = 0x06,
+	OPAL_USER7 = 0x07,
+	OPAL_USER8 = 0x08,
+	OPAL_USER9 = 0x09,
 };
 
 enum opal_lock_state {
@@ -37,7 +37,7 @@ enum opal_lock_state {
 struct opal_key {
 	uint8_t	lr;
 	uint8_t	key_len;
-	char	key[OPAL_KEY_MAX];
+	char 	key[OPAL_KEY_MAX];
 };
 
 struct opal_lr_act {
@@ -49,21 +49,23 @@ struct opal_lr_act {
 
 struct opal_session_info {
 	int sum;
-	struct opal_key opal_key;
 	enum opal_user who;
+	struct opal_key opal_key;
+	uint8_t __align[2];
 };
 
 struct opal_user_lr_setup {
-	struct opal_session_info session;
 	size_t range_start;
 	size_t range_length;
 	int    RLE; /* Read Lock enabled */
 	int    WLE; /* Write Lock Enabled */
+	struct opal_session_info session;
+	uint8_t __align[4];
 };
 
 struct opal_lock_unlock {
-	struct opal_session_info session;
 	enum opal_lock_state l_state;
+	struct opal_session_info session;
 };
 
 struct opal_new_pw {
@@ -84,6 +86,7 @@ struct opal_new_pw {
 struct opal_mbr_data {
 	u8 enable_disable;
 	struct opal_key key;
+	uint8_t __align[5];
 };
 
 #define IOC_OPAL_SAVE		    _IOW('p', 220, struct opal_lock_unlock)
