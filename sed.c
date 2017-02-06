@@ -202,7 +202,7 @@ static int do_generic_lkul(int argc, char **argv, struct command *cmd,
 			   unsigned long ioctl_cmd)
 {
 	struct config {
-		u8 lr;
+		__u8 lr;
 		char *user;
 		char *lock_type;
 		char *password;
@@ -237,7 +237,7 @@ static int do_generic_lkul(int argc, char **argv, struct command *cmd,
 	if (get_lock(cfg.lock_type, &oln.l_state))
 		return EINVAL;
 
-	oln.session.opal_key.key_len = snprintf(oln.session.opal_key.key,
+	oln.session.opal_key.key_len = snprintf((char *)oln.session.opal_key.key,
 						sizeof(oln.session.opal_key.key),
 						"%s", cfg.password);
 	if (oln.session.opal_key.key_len == 0) {
@@ -254,7 +254,7 @@ static int do_generic_opal(int argc, char **argv, struct command *cmd,
 {
 	struct opal_key pw = { };
 	struct config {
-		u8 lr;
+		__u8 lr;
 		char *password;
 	};
 	struct config cfg = { };
@@ -272,7 +272,7 @@ static int do_generic_opal(int argc, char **argv, struct command *cmd,
 		return EINVAL;
 	}
 
-	pw.key_len = snprintf(pw.key, sizeof(pw.key), "%s", cfg.password);
+	pw.key_len = snprintf((char *)pw.key, sizeof(pw.key), "%s", cfg.password);
 	pw.lr = cfg.lr;
 	return opal_error_to_human(ioctl(fd, ioctl_cmd, &pw));
 }
@@ -353,19 +353,12 @@ int sed_activatelsp(int argc, char **argv, struct command *cmd, struct plugin *p
 		opal_activate.num_lrs = count;
 	}
 
-	opal_activate.key.key_len = snprintf(opal_activate.key.key,
+	opal_activate.key.key_len = snprintf((char *)opal_activate.key.key,
 					     sizeof(opal_activate.key.key),
 					     "%s", cfg.password);
 
 	return opal_error_to_human(ioctl(fd, IOC_OPAL_ACTIVATE_LSP,
 					 &opal_activate));
-}
-
-int sed_activate_sum_lr(int argc, char **argv, struct command *cmd, struct plugin *plugin)
-{
-	char *desc = "Activate a single user mode Locking range";
-
-	return do_generic_opal(argc, argv, cmd, plugin, desc, IOC_OPAL_ACTIVATE_SUM_LR);
 }
 
 int sed_reverttper(int argc, char **argv, struct command *cmd, struct plugin *plugin)
@@ -385,7 +378,7 @@ int sed_setuplr(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	int fd;
 	struct opal_user_lr_setup setup = { };
 	struct config {
-		u8 lr;
+		__u8 lr;
 		char *user;
 		char *password;
 		bool sum;
@@ -434,7 +427,7 @@ int sed_setuplr(int argc, char **argv, struct command *cmd, struct plugin *plugi
 	setup.range_start = cfg.range_start;
 	setup.range_length = cfg.range_length;
 
-	setup.session.opal_key.key_len = snprintf(setup.session.opal_key.key,
+	setup.session.opal_key.key_len = snprintf((char *)setup.session.opal_key.key,
 						  sizeof(setup.session.opal_key.key),
 						  "%s", cfg.password);
 	if (setup.session.opal_key.key_len == 0) {
@@ -488,7 +481,7 @@ int sed_shadowmbr(int argc, char **argv, struct command *cmd,
 		mbr.enable_disable = OPAL_MBR_DISABLE;
 
 
-	mbr.key.key_len = snprintf((char *)mbr.key.key,
+	mbr.key.key_len = snprintf((char *)(char *)mbr.key.key,
 				   sizeof(mbr.key.key),
 				   "%s", cfg.password);
 	return opal_error_to_human(ioctl(fd, IOC_OPAL_ENABLE_DISABLE_MBR, &mbr));
@@ -540,7 +533,7 @@ int sed_setpw(int argc, char **argv, struct command *cmd,
 	pw.session.sum = cfg.sum;
 
 	pw.session.opal_key.lr = pw.session.who - 1;
-	pw.session.opal_key.key_len = snprintf((char *)pw.session.opal_key.key,
+	pw.session.opal_key.key_len = snprintf((char *)(char *)pw.session.opal_key.key,
 					       sizeof(pw.session.opal_key.key),
 					       "%s", cfg.authority_pw);
 	/* In sum When we want to set a password as a user we start a
@@ -556,7 +549,7 @@ int sed_setpw(int argc, char **argv, struct command *cmd,
 
 	pw.new_user_pw.opal_key.lr = pw.new_user_pw.who - 1;
 	pw.new_user_pw.opal_key.key_len =
-		snprintf((char *)pw.new_user_pw.opal_key.key,
+		snprintf((char *)(char *)pw.new_user_pw.opal_key.key,
 			 sizeof(pw.new_user_pw.opal_key.key),
 			 "%s", cfg.new_password);
 
@@ -596,7 +589,7 @@ int sed_enable_user(int argc, char **argv, struct command *cmd,
 		fprintf(stderr, "Opal Admin is already activated by default!\n");
 		return EINVAL;
 	}
-	usr.opal_key.key_len = snprintf(usr.opal_key.key, sizeof(usr.opal_key.key),
+	usr.opal_key.key_len = snprintf((char *)usr.opal_key.key, sizeof(usr.opal_key.key),
 				   "%s", cfg.password);
 	usr.opal_key.lr = 0;
 	return opal_error_to_human(ioctl(fd, IOC_OPAL_ACTIVATE_USR, &usr));
@@ -607,7 +600,7 @@ int sed_erase_lr(int argc, char **argv, struct command *cmd,
 {
 	const char *desc = "Erase a Locking Range: *THIS ERASES YOUR DATA!*";
 	struct config {
-		u8 lr;
+		__u8 lr;
 		char *user;
 		char *password;
 		bool sum;
@@ -636,7 +629,7 @@ int sed_erase_lr(int argc, char **argv, struct command *cmd,
 			return EINVAL;
 
 
-	session.opal_key.key_len = snprintf(session.opal_key.key,
+	session.opal_key.key_len = snprintf((char *)session.opal_key.key,
 					    sizeof(session.opal_key.key),
 					    "%s", cfg.password);
 	session.opal_key.lr = cfg.lr;
@@ -651,7 +644,7 @@ int sed_secure_erase_lr(int argc, char **argv, struct command *cmd,
 	struct config {
 		char *user;
 		char *password;
-		u8   lr;
+		__u8   lr;
 		bool sum;
 	};
 	struct config cfg = {  };
@@ -674,7 +667,7 @@ int sed_secure_erase_lr(int argc, char **argv, struct command *cmd,
 	if (get_user(cfg.user, &usr.who))
 		return EINVAL;
 
-	usr.opal_key.key_len = snprintf(usr.opal_key.key, sizeof(usr.opal_key.key),
+	usr.opal_key.key_len = snprintf((char *)usr.opal_key.key, sizeof(usr.opal_key.key),
 				   "%s", cfg.password);
 	usr.opal_key.lr = 0;
 	return opal_error_to_human(ioctl(fd, IOC_OPAL_SECURE_ERASE_LR, &usr));
