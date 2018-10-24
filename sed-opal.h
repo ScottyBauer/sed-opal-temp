@@ -1,23 +1,3 @@
-/*
- * Copyright © 2016 Intel Corporation
- *
- * Authors:
- *    Rafael Antognolli <rafael.antognolli@intel.com>
- *    Scott  Bauer      <scott.bauer@intel.com>
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- */
-
-#ifndef _UAPI_SED_OPAL_H
-#define _UAPI_SED_OPAL_H
-
 #include <linux/types.h>
 
 #define OPAL_KEY_MAX 256
@@ -116,4 +96,3 @@ struct opal_mbr_data {
 #define IOC_OPAL_ERASE_LR           _IOW('p', 230, struct opal_session_info)
 #define IOC_OPAL_SECURE_ERASE_LR    _IOW('p', 231, struct opal_session_info)
 
-#endif /* _UAPI_SED_OPAL_H */
